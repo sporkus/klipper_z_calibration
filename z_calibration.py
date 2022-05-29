@@ -326,6 +326,7 @@ class CalibrationState:
     def calibrate_z(self):
         self.helper.start_gcode.run_gcode_from_command()
         # probe the nozzle
+        self.gcmd.respond_info("Probing nozzle:")
         nozzle_zero = self._probe_on_z_endstop(self.helper.nozzle_site)
         # probe the probe-switch
         self.helper.switch_gcode.run_gcode_from_command()
@@ -335,8 +336,10 @@ class CalibrationState:
             raise self.helper.printer.command_error("Probe switch not closed"
                                                     " - Probe not attached?")
         # probe the body of the switch
+        self.gcmd.respond_info("Probing body of the switch:")
         switch_zero = self._probe_on_z_endstop(self.helper.switch_site)
         # probe position on bed
+        self.gcmd.respond_info("Probing the bed:")
         probe_zero = self._probe_on_bed(self.helper.bed_site)
         # move up by retract_dist
         self.helper._move([None, None,
@@ -350,6 +353,11 @@ class CalibrationState:
                                " SWITCH=%.3f PROBE=%.3f --> OFFSET=%.6f"
                                % (self.helper.z_homing, nozzle_zero,
                                   switch_zero, probe_zero, offset))
+        self.gcmd.respond_info("Z-CALIBRATION: %.3f[probe] - (%.3f[switch]"
+                               " - %.3f[nozzle] + %.3f[switch_offset])"
+                               "--> [offset]%.6f"
+                               % (probe_zero, switch_zero, nozzle_zero, 
+                                  self.helper.switch_offset, offset))
         # check max deviation
         if abs(offset) > self.helper.max_deviation:
             raise self.helper.printer.command_error("Offset is larger as"
